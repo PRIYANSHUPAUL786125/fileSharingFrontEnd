@@ -1,59 +1,26 @@
 import axios from "axios";
-import backendUrl from "../../constant"
 import { useNavigate } from 'react-router-dom';
-axios.defaults.baseURL = backendUrl;
+
+// 🔑 Global config for any raw axios calls
 axios.defaults.withCredentials = true;
-console.log(backendUrl)
-export  function useLogout() {
-  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      // 1. Hit the logout endpoint with credentials enabled
-      const res=await axios.post(`${backendUrl}/api/auth/logout`, {}, {
-        withCredentials: true
-      });
-      console.log(res.data)
-
-      // 2. Clear any local state or fallback storage if you have it
-
-      // 3. Redirect the user to the login page
-      navigate('/login');
-      
-    } catch (error) {
-      console.error("Logout failed:", error.response?.data?.message || error.message);
-      
-      // Force redirect to login anyway if the session is already dead
-      navigate('/login');
-    }
-  };
-
-  return handleLogout;
-}
-export const handleGoogleLogin = async () => {
-    window.location.href = `${backendUrl}/api/auth/login`;
-};
-// src/api/api.js
-
-// Create an instance pointing to your backend
-// src/api/api.js
-
+// 🌟 THE CENTRAL PROXIED INSTANCE
+// baseURL "/api" → Vercel proxy → Render backend (same-origin, cookies work)
 const API = axios.create({
-  baseURL: `${backendUrl}/api`,
+  baseURL: "/api",
   withCredentials: true,
 });
-console.log(API.baseURL)
 
-// Variables to manage the token refresh queue
+// ─── Token Refresh Queue ──────────────────────────────────────────────────────
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
   failedQueue = [];
@@ -65,33 +32,28 @@ API.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      
-      // If a refresh is already in progress, queue this request
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(() => {
-            return API(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
+          .then(() => API(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       return new Promise((resolve, reject) => {
-        axios.post(`${backendUrl}/api/auth/refresh-token`, {}, { withCredentials: true })
-          .then((res) => {
+        API.post('/auth/refresh-token', {})
+          .then(() => {
             console.log("Token rotated successfully! Processing waiting queue...");
             processQueue(null);
             resolve(API(originalRequest));
           })
           .catch((err) => {
             console.error("Critical refresh failure. Purging queue.");
-            processQueue(err, null);
+            processQueue(err);
             reject(err);
           })
           .finally(() => {
@@ -104,5 +66,28 @@ API.interceptors.response.use(
   }
 );
 
-export default API;
+// ─── Auth Helpers ─────────────────────────────────────────────────────────────
 
+export function useLogout() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const res = await API.post('/auth/logout', {});
+      console.log(res.data);
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout failed:", error.response?.data?.message || error.message);
+      navigate('/login');
+    }
+  };
+
+  return handleLogout;
+}
+
+export const handleGoogleLogin = () => {
+  // Hits Vercel proxy → Render /api/auth/login → Google OAuth
+  window.location.href = "/api/auth/login";
+};
+
+export default API;
