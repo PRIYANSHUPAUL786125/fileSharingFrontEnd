@@ -39,9 +39,10 @@ export const handleGoogleLogin = async () => {
 // src/api/api.js
 
 const API = axios.create({
-  baseURL: `${backendUrl}api`,
+  baseURL: `${backendUrl}/api`,
   withCredentials: true,
 });
+console.log(API.baseURL)
 
 // Variables to manage the token refresh queue
 let isRefreshing = false;
