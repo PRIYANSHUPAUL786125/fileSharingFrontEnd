@@ -1,14 +1,16 @@
 import axios from "axios";
+import backendUrl from "../../constant"
 import { useNavigate } from 'react-router-dom';
-axios.defaults.baseURL = 'http://127.0.0.1:3000';
+axios.defaults.baseURL = backendUrl;
 axios.defaults.withCredentials = true;
+console.log(backendUrl)
 export  function useLogout() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       // 1. Hit the logout endpoint with credentials enabled
-      const res=await axios.post('http://localhost:3000/api/auth/logout', {}, {
+      const res=await axios.post(`${backendUrl}/api/auth/logout`, {}, {
         withCredentials: true
       });
       console.log(res.data)
@@ -29,7 +31,7 @@ export  function useLogout() {
   return handleLogout;
 }
 export const handleGoogleLogin = async () => {
-    window.location.href = "http://localhost:3000/api/auth/login";
+    window.location.href = `${backendUrl}/api/auth/login`;
 };
 // src/api/api.js
 
@@ -37,7 +39,7 @@ export const handleGoogleLogin = async () => {
 // src/api/api.js
 
 const API = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: `${backendUrl}api`,
   withCredentials: true,
 });
 
@@ -80,7 +82,7 @@ API.interceptors.response.use(
       isRefreshing = true;
 
       return new Promise((resolve, reject) => {
-        axios.post('http://localhost:3000/api/auth/refresh-token', {}, { withCredentials: true })
+        axios.post(`${backendUrl}/api/auth/refresh-token`, {}, { withCredentials: true })
           .then((res) => {
             console.log("Token rotated successfully! Processing waiting queue...");
             processQueue(null);
