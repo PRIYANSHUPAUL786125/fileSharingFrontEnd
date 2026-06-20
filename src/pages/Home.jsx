@@ -64,7 +64,7 @@ setFileUuid(""); // 👈 Clear previous UUID on fresh drop
 
         try {
             // Sent with credentials so your httpOnly accessToken cookie is attached automatically
-            const res = await API.post("/files/", formData, {
+            const res = await API.post("/files", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             console.log(res.data.data.url);
