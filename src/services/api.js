@@ -98,7 +98,7 @@ export function useLogout() {
 export const handleGoogleLogin = () => {
     // Hits Vercel proxy → Render /api/auth/login → Google OAuth
     window.location.href =
-        "https://api-file-sharing-test.onrender.com/api/auth/login";
+        "/api/auth/login";
 };
 
 export default API;
