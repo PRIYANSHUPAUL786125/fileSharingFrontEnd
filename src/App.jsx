@@ -7,13 +7,14 @@ import HomePage from "./pages/Home";
 function AppRoutes() {
     return (
         <Routes>
-            <Route path="/login" element={<LoginPage  />} />
+            <Route path="/login" element={<LoginPage />} />
 
             <Route
                 path="/dashboard"
-                element={<ProtectedRoute>
+                element={
+                    <ProtectedRoute>
                         <HomePage />
-                </ProtectedRoute>
+                    </ProtectedRoute>
                 }
             />
 
@@ -23,7 +24,6 @@ function AppRoutes() {
 }
 
 export default function App() {
-
     return (
         <BrowserRouter>
             <AuthProvider>

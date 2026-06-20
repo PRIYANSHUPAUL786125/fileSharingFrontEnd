@@ -10,12 +10,17 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("before");
         // Hit an endpoint that returns the current user profile based on cookies
-        const response = await API.get('auth/me');
+        const response = await API.get('/auth/me');
+        console.log("success")
+        console.log(response)
         setUser(response.data);
       } catch (error) {
+        console.log("error",error)
         setUser(null);
       } finally {
+        console.log("finally")
         setLoading(false);
       }
     };
